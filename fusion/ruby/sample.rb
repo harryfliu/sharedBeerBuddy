@@ -5,8 +5,8 @@ require "optparse"
 
 # Place holders for Yelp Fusion's OAuth 2.0 credentials. Grab them
 # from https://www.yelp.com/developers/v3/manage_app
-CLIENT_ID = nil
-CLIENT_SECRET = nil
+CLIENT_ID = 'Sge8Bu-UokjPscJR1Xd9yw'
+CLIENT_SECRET = 'vI44X2b1JnhCFQEPUfEAmHKL4HUx8BjV2M7crwqtEsaEuTQaIHrhfnGOqU8pZT5z'
 
 
 # Constants, do not change these
@@ -20,7 +20,10 @@ GRANT_TYPE = "client_credentials"
 DEFAULT_BUSINESS_ID = "yelp-san-francisco"
 DEFAULT_TERM = "dinner"
 DEFAULT_LOCATION = "San Francisco, CA"
-SEARCH_LIMIT = 5
+SEARCH_LIMIT = 10
+SORT_PARAM = "rating"
+PRICE_PARAM = "1, 2"
+MILES_PARAM = 25000 # may have to have a meters to miles converter built in
 
 
 # Make a request to the Fusion API token endpoint to get the access token.
@@ -87,7 +90,11 @@ def search(term, location)
   params = {
     term: term,
     location: location,
-    limit: SEARCH_LIMIT
+    limit: SEARCH_LIMIT,
+    sort_by: SORT_PARAM,
+    price: PRICE_PARAM,
+    open_now: true,
+    radius: MILES_PARAM
   }
 
   response = HTTP.auth(bearer_token).get(url, params: params)
@@ -142,7 +149,12 @@ end.parse!
 
 
 command = ARGV
-
+print "Enter the filename you want to export data to (make sure you're in same directory as file): "
+filename = $stdin.gets.chomp
+puts "Opening file."
+file = open(filename, 'w')
+puts "Erasing file to prepare for new write..."
+file.truncate(0)
 
 case command.first
 when "search"
@@ -153,8 +165,17 @@ when "search"
 
   response = search(term, location)
 
-  puts "Found #{response["total"]} businesses. Listing #{SEARCH_LIMIT}:"
-  response["businesses"].each {|biz| puts biz["name"]}
+  file.write("Found #{response["total"]} businesses. Listing up to #{SEARCH_LIMIT}: \n\n")
+  response["businesses"].each {|biz| 
+    file.write("#{biz["name"]}  --  #{biz["location"]["display_address"]}  --  #{biz["display_phone"]} \n") 
+  }
+
+  final_destination = Array.new
+  response["businesses"].delete_if {|biz, value| biz["rating"] < 3.5 }
+  file.write("\nThis is the number of suitable destinations left. #{response["businesses"].length}")
+  final_destination = response["businesses"].to_a.sample
+  file.write("\n#{final_destination["name"]}\n")
+
 when "lookup"
   business_id = options.fetch(:business_id, DEFAULT_BUSINESS_ID)
 
