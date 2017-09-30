@@ -15,7 +15,8 @@ const searchRequest = {
   limit: 10,
   sort_by: 'rating',
   price: '1, 2, 3',
-  open_now: true
+  open_now: true,
+  categories: 'breweries,bars,beergarden,pubfood'
 };
 
 var venue_names = [];
@@ -40,7 +41,6 @@ yelp.accessToken(clientId, clientSecret).then(response => {
     }
     const final_destination = venue_names[Math.floor(Math.random() * venue_names.length)];
     console.log(final_destination);
-    //console.log('Did I get here?');
   });
 }).catch(e => {
   console.log(e);
