@@ -18,12 +18,15 @@ const searchRequest = {
   open_now: true
 };
 
+var venue_names = [];
+
 yelp.accessToken(clientId, clientSecret).then(response => {
   const client = yelp.client(response.jsonBody.access_token);
 
   client.search(searchRequest).then(response => {
     for (i = 0; i < response.jsonBody.businesses.length; i++) {
-      const allResults_names = response.jsonBody.businesses[i].name; 
+      const allResults_names = response.jsonBody.businesses[i].name;
+      venue_names.push(allResults_names);
       const allResults_location = response.jsonBody.businesses[i].location.display_address; 
       const allResults_rating = response.jsonBody.businesses[i].rating; 
       const prettyJson1 = JSON.stringify(allResults_names, null, 4);
@@ -35,6 +38,9 @@ yelp.accessToken(clientId, clientSecret).then(response => {
         console.log("Rating: " + prettyJson3);
       }
     }
+    const final_destination = venue_names[Math.floor(Math.random() * venue_names.length)];
+    console.log(final_destination);
+    //console.log('Did I get here?');
   });
 }).catch(e => {
   console.log(e);
